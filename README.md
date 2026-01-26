@@ -2,6 +2,11 @@
 BlueNuclei is a fully automated, SVM-powered, Python-based tool for identifying and classifying live/dead transfected neurons from dual-channel fluorescent images. 
 
 It is a locally execatable app with a user friendly web-based interface. No programming skills, environment setup, package installation, or speciazlied hardware/software (not even Python) is needed. Simply download it and click to run. The "requirements.txt" file is intended for development only, not for users.
+## User Interface
+
+<p align="center">
+  <img src="assets/ui.png" alt="BlueNuclei UI" width="800">
+</p>
 
 Refer to "BlueNuclei_workflow.svg" for a visual illustration of how BlueNuclei works under the hood. Basically, it consists of two integrated modules: 
 Module 1 takes a dual-channel image as input and selectively identifies nuclei of transfected neurons by first detecting cytoplasmic territories in the GFP channel using thresholding and shape-based filtering, followed by projecting them onto the DAPI channel to delineate their enclosed nuclear contours based on high-contrast edge pixels. The coordinates of these nuclei will be ported to module 2.
