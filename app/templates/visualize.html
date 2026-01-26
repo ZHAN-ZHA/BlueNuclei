@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Synced Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+    <style>
+        body {
+            background: black;
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h2 {
+            margin: 20px 0;
+        }
+        .viewer-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .openseadragon {
+            width: 45vw;
+            height: 80vh;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Zoom/Pan Synced Plots</h2>
+    <div class="viewer-container">
+        <div id="viewer1" class="openseadragon"></div>
+        <div id="viewer2" class="openseadragon"></div>
+    </div>
+
+    <script>
+        const img_id = "{{ img_id }}";
+        const tileSource1 = {
+            type: 'image',
+            url: `/temp_plot/${img_id}/plot1.png`
+        };
+        const tileSource2 = {
+            type: 'image',
+            url: `/temp_plot/${img_id}/plot2.png`
+        };
+
+        const viewer1 = OpenSeadragon({
+            id: "viewer1",
+            prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+            tileSources: tileSource1,
+            showNavigator: true,
+            defaultZoomLevel: 1
+        });
+
+        const viewer2 = OpenSeadragon({
+            id: "viewer2",
+            prefixUrl: "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+            tileSources: tileSource2,
+            showNavigator: true,
+            defaultZoomLevel: 1
+        });
+
+        function syncView(sourceViewer, targetViewer) {
+            sourceViewer.addHandler('viewport-change', function () {
+                if (!sourceViewer.viewport || !targetViewer.viewport) return;
+                const center = sourceViewer.viewport.getCenter();
+                const zoom = sourceViewer.viewport.getZoom();
+                targetViewer.viewport.zoomTo(zoom);
+                targetViewer.viewport.panTo(center);
+            });
+        }
+
+        syncView(viewer1, viewer2);
+        syncView(viewer2, viewer1);
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# PyInstaller output
+build/
+dist/
+
+# Virtual environments
+build_env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
