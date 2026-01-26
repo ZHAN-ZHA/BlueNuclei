@@ -1,0 +1,130 @@
+// Get the list of annotation objects (ROIs) in the current image
+def annotations = getAnnotationObjects()
+
+// Initialize counters for live and dead ROIs
+def live_counter = 1
+def dead_counter = 1
+
+// Loop through each annotation object (ROI)
+annotations.each { roi ->
+    // Get the classification of the ROI
+    def classification = roi.getPathClass() ? roi.getPathClass().toString() : "Unclassified"
+    
+    // Check if the classification is "live"
+    if (classification == "live") {
+        // Rename the ROI to "L1", "L2", etc.
+        roi.setName("L" + live_counter++)
+    }
+    // Check if the classification is "dead"
+    else if (classification == "dead") {
+        // Rename the ROI to "D1", "D2", etc.
+        roi.setName("D" + dead_counter++)
+    }
+}
+
+// Notify QuPath to update the changes
+fireHierarchyUpdate()
+
+
+
+
+
+
+def channel_of_interest = 1 // null to export all the channels 
+def downsample = 1
+
+def image_name = getProjectEntry().getImageName()
+
+def rm = RoiManager.getRoiManager() ?: new RoiManager()
+// create an annotation of the entire image
+createSelectAllObject(true)
+def fullimage_annotation = getSelectedObject()
+
+imageData = getCurrentImageData();
+server = imageData.getServer();
+viewer = getCurrentViewer();
+hierarchy = getCurrentHierarchy();
+
+request = RegionRequest.createInstance(imageData.getServerPath(), downsample, fullimage_annotation.getROI())
+pathImage = null;
+pathImage = IJExtension.extractROIWithOverlay(server, fullimage_annotation, hierarchy, request, false, viewer.getOverlayOptions());
+image = pathImage.getImage()
+
+// Create the Labels image
+def labels = IJ.createImage("Labels", "16-bit black", image.getWidth(), image.getHeight(), 1);
+
+IJ.run(image, "To ROI Manager", "")
+def rois = rm.getRoisAsArray() as List
+
+def label_ip = labels.getProcessor()
+def idx = 0
+def roi_mapping = [] // List to store mapping info
+
+rois.each { roi ->
+   if (roi.getType() == Roi.RECTANGLE) {
+       println("Ignoring Rectangle")
+   } else {
+       int assigned_label = ++idx 
+       label_ip.setColor(assigned_label)
+       label_ip.setRoi(roi)
+       label_ip.fill(roi)
+
+       // Get roi name
+       def roi_name = roi.getName() ?: "Unknown"
+       
+       // Store mapping info
+       roi_mapping << "${roi_name},${assigned_label}"
+   }
+}
+labels.setProcessor(label_ip)
+
+// Save mapping to CSV file
+def mappingDir = new File(buildFilePath(PROJECT_BASE_DIR, 'ground_truth'))
+if (!mappingDir.exists()) {
+    mappingDir.mkdirs() // Create directory if it does not exist
+}
+
+def mappingFile = new File(mappingDir, 'roi_mapping.csv')
+mappingFile.text = "Object ID,Label\n" + roi_mapping.join("\n")
+
+println("ROI mapping saved to: " + mappingFile.getAbsolutePath())
+
+// Split to keep only channel of interest
+def output = image
+if (channel_of_interest != null) {
+    imp_chs = ChannelSplitter.split(image)
+    output = imp_chs[channel_of_interest - 1]
+}
+
+saveImages(output, labels, image_name)
+
+println(image_name + " Image and Mask Saved.")
+
+// Save some RAM
+output.close()
+labels.close()
+image.close()
+
+// remove the fullimage_annotation from the list of annotations
+removeObject(fullimage_annotation, true)
+
+// This will save the images in the selected folder
+def saveImages(def images, def labels, def name) {
+    def source_folder = new File(buildFilePath(PROJECT_BASE_DIR, 'ground_truth', 'images'))
+    def target_folder = new File(buildFilePath(PROJECT_BASE_DIR, 'ground_truth', 'masks'))
+    mkdirs(source_folder.getAbsolutePath())
+    mkdirs(target_folder.getAbsolutePath())
+
+    IJ.save(images, new File(source_folder, name).getAbsolutePath() + '.tif')
+    IJ.save(labels, new File(target_folder, name).getAbsolutePath() + '.tif')
+}
+
+// Manage Imports
+import qupath.lib.roi.RectangleROI
+import qupath.imagej.gui.IJExtension;
+import qupath.lib.objects.PathObject
+import ij.IJ
+import ij.gui.Roi
+import ij.plugin.ChannelSplitter
+import ij.plugin.frame.RoiManager
+print "done"
