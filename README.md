@@ -8,6 +8,7 @@ It is a locally execatable app with a user friendly web-based interface. No prog
 <p align="center">
   <img src="assets/ui.jpg" alt="BlueNuclei UI" width="800">
 </p>
+
 ## How it works
 Refer to "BlueNuclei_workflow.svg" for a visual illustration of how BlueNuclei works under the hood. Briefly, BlueNuclei consists of two integrated modules: 
 Module 1 takes a dual-channel image as input and selectively identifies nuclei of transfected neurons by first detecting cytoplasmic territories in the GFP channel using thresholding and shape-based filtering, followed by projecting them onto the DAPI channel to delineate their enclosed nuclear contours based on high-contrast edge pixels. The coordinates of these nuclei will be ported to module 2.
