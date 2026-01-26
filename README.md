@@ -5,7 +5,7 @@ It is a locally execatable app with a user friendly web-based interface. No prog
 ## User Interface
 
 <p align="center">
-  <img src="assets/ui.png" alt="BlueNuclei UI" width="800">
+  <img src="assets/ui.jpg" alt="BlueNuclei UI" width="800">
 </p>
 
 Refer to "BlueNuclei_workflow.svg" for a visual illustration of how BlueNuclei works under the hood. Basically, it consists of two integrated modules: 
