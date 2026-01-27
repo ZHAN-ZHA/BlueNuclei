@@ -1,9 +1,24 @@
-<img src="assets/logo.png" alt="BlueNuclei logo" width="220">
+# BlueNuclei
 
 ## Introduction
-BlueNuclei is a machine-learning–based software for identifying and classifying live vs. dead transfected neurons from dual-channel fluorescence images (DAPI + GFP).
-It is designed for neurobiologists without programming experience, runs fully offline, and is distributed as a stand-alone desktop application for Windows and macOS.
+
+<table>
+<tr>
+<td width="70%">
+
+BlueNuclei is a machine-learning–based software for identifying and classifying live vs. dead transfected neurons from dual-channel fluorescence images (DAPI + GFP). It is designed for neurobiologists without programming experience, runs fully offline, and is distributed as a stand-alone desktop application for Windows and macOS.
+
 A schematic overview of the algorithmic workflow is provided in [`BlueNuclei_workflow.svg`](BlueNuclei_workflow.svg). Full methodological details are described in our accompanying manuscript.
+
+</td>
+<td width="30%" align="center">
+
+<img src="assets/logo.png" alt="BlueNuclei logo" width="280">
+
+</td>
+</tr>
+</table>
+
 ## Supported input
 Under the current version (v1.0), only Zeiss .czi files are supported. The input file should be a dual-channel image with DAPI channel (nuclei) and GFP channel (cytoplasm).
 ## Installation & Usage
