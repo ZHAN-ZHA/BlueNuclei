@@ -51,6 +51,7 @@ Training and evaluation data are available upon request
 ### Build BlueNuclei from source (MacOS example)
 ```bash
 cd your_folder_path
+
 pyinstaller --noconfirm --clean \
   --name BlueNuclei \
   --windowed \
@@ -63,12 +64,16 @@ pyinstaller --noconfirm --clean \
   --add-data "app/svm_model.pkl:svm_model.pkl" \
   --add-data "app/svm_threshold.pkl:svm_threshold.pkl" \
   app/main.py
+
 python3 -m venv build_env 
 source build_env/bin/activate
+
 pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
 pip install pyinstaller waitress
+
 pyinstaller --noconfirm --clean BlueNuclei.spec
+```
 ### Train a custom SVM model
 #### Step 1: Annotate nuclei in QuPath
 Use [QuPath](https://qupath.github.io/) (an open-source image annotation software) to label and annotate the nuclei in your images with the “wand” or “polygon” tool.
