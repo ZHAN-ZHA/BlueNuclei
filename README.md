@@ -49,6 +49,7 @@ A linear Support Vector Machine (SVM) classifier trained on five sub-nuclear fea
 Training and evaluation data are available upon request
 (contact: zzha2@u.rochester.edu or daniel.taliun@mcgill.ca).
 ### Build BlueNuclei from source (MacOS example)
+```bash
 cd your_folder_path
 pyinstaller --noconfirm --clean \
   --name BlueNuclei \
