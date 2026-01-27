@@ -20,6 +20,8 @@ Windows: double-click `BlueNuclei.exe`
 
 Mac: double-click `BlueNuclei.app`
 
+(On Mac, if a message pops up saying "BlueNuclei not opened: Apple can't verify BlueNuclei is free of malware...": click `Done` - go to `System Settings` on your Mac - go to `Privacy & Security` - scroll down to `"BlueNuclei" was blocked to protect your Mac` - click `Open Anyway`)
+
 After a brief initialization, BlueNuclei launches automatically in your default web browser.
 <p align="center">
   <img src="assets/ui.jpg" alt="BlueNuclei UI" width="800">
@@ -67,19 +69,6 @@ Training and evaluation data are available upon request
 ```bash
 cd your_folder_path
 
-pyinstaller --noconfirm --clean \
-  --name BlueNuclei \
-  --windowed \
-  --onedir \
-  --splash splash.png \
-  --add-data "app/templates:templates" \
-  --add-data "app/static:static" \
-  --add-data "app/std_scaler.pkl:std_scaler.pkl" \
-  --add-data "app/minmax_scaler.pkl:minmax_scaler.pkl" \
-  --add-data "app/svm_model.pkl:svm_model.pkl" \
-  --add-data "app/svm_threshold.pkl:svm_threshold.pkl" \
-  app/main.py
-
 python3 -m venv build_env 
 source build_env/bin/activate
 
@@ -113,4 +102,8 @@ If you use BlueNuclei in your research, please cite our accompanying manuscript 
 For questions, data access, or collaboration:
 - Zhan Zha – zzha2@u.rochester.edu
 - Daniel Taliun – daniel.taliun@mcgill.ca
+
+## License
+This repository is released under the Apache 2.0 License for academic and research use.
+Commercial support and enterprise licensing are available separately.
 
