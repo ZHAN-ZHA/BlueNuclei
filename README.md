@@ -1,12 +1,10 @@
-# BlueNuclei
+# BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features
 
 <img src="assets/logo.png"
      width="230"
      alt="BlueNuclei logo"
      align="right"
      vspace="40">
-
-**BlueNuclei: automated classification of live vs. dead transfected neurons from dual-channel fluorescence microscopy (DAPI + GFP).**
 
 BlueNuclei is a machine-learning–based software designed for neurobiologists without programming experience. It runs fully offline and is distributed as a stand-alone desktop application for Windows and macOS.
 
