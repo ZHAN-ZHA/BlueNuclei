@@ -10,6 +10,7 @@ Under the current version (v1.0), only Zeiss .czi files are supported. The input
 Download the BlueNuclei app (Windows or macOS) from the [GitHub Releases page](https://github.com/ZHAN-ZHA/BlueNuclei/releases), along with the provided sample image toy_image.czi.
 ### Launch
 Windows: double-click `BlueNuclei.exe`
+
 Mac: double-click `BlueNuclei.app`
 
 After a brief initialization, BlueNuclei launches automatically in your default web browser.
@@ -21,6 +22,7 @@ After a brief initialization, BlueNuclei launches automatically in your default 
 - Click “Run BlueNuclei” in the left menu
 - Select one or more .czi image files (or the provided sample)
 - Click “Analyze”
+
 For a typical 5000 × 5000 pixel image, analysis completes in ~30 seconds on a standard laptop.
 ### Visualization & Export
 - Click “Visualize” to inspect results interactively (synchronized zoom/pan across DAPI and GFP channels)
@@ -37,10 +39,12 @@ The core algorithm is implemented in:
 `app/BlueNuclei_utils.py`
 ### Algorithm overview
 BlueNuclei consists of two integrated modules:
+
 “Hyades” module – Nucleus Detection
 - Identifies cytoplasmic territories of transfected neurons in the GFP channel using thresholding and shape-based filtering
 - Projects these regions onto the DAPI channel
 - Extracts enclosed nuclear contours using high-contrast edge pixels
+
 “Pleiades” module – Live/Dead Classification
 A linear Support Vector Machine (SVM) classifier trained on five sub-nuclear features designed to mimic expert visual assessment:
 - Spottiness
