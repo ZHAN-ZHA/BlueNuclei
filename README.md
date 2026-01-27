@@ -1,7 +1,9 @@
-<h1 align="center">
-  <img src="assets/logo.png" alt="BlueNuclei logo" width="42" style="margin-bottom: -6px;">
-  BlueNuclei
-</h1>
+<table>
+  <tr>
+    <td><img src="assets/logo.png" width="48"></td>
+    <td><h1>BlueNuclei</h1></td>
+  </tr>
+</table>
 
 ## Introduction
 BlueNuclei is a machine-learning–based software for identifying and classifying live vs. dead transfected neurons from dual-channel fluorescence images (DAPI + GFP).
