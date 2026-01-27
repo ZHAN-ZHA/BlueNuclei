@@ -1,7 +1,7 @@
-# BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features
+# BlueNuclei: Detect and Classify Live/Dead Transfected Neurons
 
 <img src="assets/logo.png"
-     width="230"
+     width="320"
      alt="BlueNuclei logo"
      align="right"
      vspace="40">
