@@ -46,12 +46,14 @@ BlueNuclei consists of two integrated modules:
 - Extracts enclosed nuclear contours using high-contrast edge pixels
 
 “Pleiades” module – Live/Dead Classification
+
 A linear Support Vector Machine (SVM) classifier trained on five sub-nuclear features designed to mimic expert visual assessment:
 - Spottiness
 - Spot distribution
 - Edge gradient
 - Area
 - Intensity
+
 Training and evaluation data are available upon request
 (contact: zzha2@u.rochester.edu or daniel.taliun@mcgill.ca).
 ### Build BlueNuclei from source (MacOS example)
@@ -96,6 +98,7 @@ Run the notebook [`extras/BlueNuclei_train_SVM.ipynb`](extras/BlueNuclei_train_S
 - minmax_scaler.pkl
 - label_encoder.pkl
 - svm_threshold.pkl
+
 These files can be used to rebuild the BlueNuclei application with your custom SVM model.
 ## Citation
 If you use BlueNuclei in your research, please cite our accompanying manuscript (details forthcoming).
