@@ -34,8 +34,12 @@ After a brief initialization, BlueNuclei launches automatically in your default 
 
 For a typical 5000 × 5000 pixel image, analysis completes in ~30 seconds on a standard laptop.
 ### Visualization & Export
-- Click “Visualize” to inspect results interactively (synchronized zoom/pan across DAPI and GFP channels)
 - Click “Save results” to export live/dead counts as a CSV file
+- Click “Visualize” to inspect results interactively (synchronized zoom/pan across DAPI and GFP channels). You can move around and zoom in/out. Each predicted nucleus is marked together with its corresponding cytoplasm, with calculated feature values and a confidence score (the number in parenthesis following "Class") displayed as text. The text will appear in red if a nucleus has a confidence score close to the machine learning model's decision boundry (i.e. edge case between "live" and "dead").
+
+<p align="center">
+  <img src="assets/ui_2.jpg" alt="BlueNuclei UI" width="800">
+</p>
 
 ## For developers/advanced users
 ### Codebase
