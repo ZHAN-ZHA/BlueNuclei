@@ -28,8 +28,10 @@ write_log("=== launcher.py imported (very early) ===")
 
 
 def resource_path(relative_path: str) -> str:
-    base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    # DEV MODE: relative to this file (app/)
+    return os.path.join(os.path.dirname(__file__), relative_path)
 
 def wait_for_http(url: str, timeout_s: float = 20.0, interval_s: float = 0.2) -> bool:
     deadline = time.time() + timeout_s

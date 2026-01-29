@@ -23,10 +23,13 @@ from skimage import draw
 from skimage.filters import threshold_triangle, threshold_otsu
 from math import pi
 from sklearn.cluster import DBSCAN
-import cv2, __main__, scipy, re, os, math, skimage, sys, time, logging
+import __main__, re, os, math, sys, time, logging
 import tempfile
 import random
 from matplotlib.path import Path
+import gc
+import cv2
+import json
 
 
 random.seed(42)
@@ -170,7 +173,7 @@ def draw_contour(contours, canvas, mask_exist, colors,
             arrow_base = (arrow_tip[0], arrow_tip[1] - arrow_length)
             cv2.arrowedLine(canvas,
                             arrow_base, arrow_tip,
-                            color=(255, 0, 0),
+                            color=(255, 255, 255),
                             thickness=arrow_thickness,
                             tipLength=arrow_tip_len)
 
@@ -181,7 +184,11 @@ def draw_contour(contours, canvas, mask_exist, colors,
     if show_img:
         Image.fromarray(canvas).show()
     if save_img is not None:
-        Image.fromarray(canvas).save(os.path.join(fp, save_img))
+        cv2.imwrite(
+            os.path.join(fp, save_img),
+            canvas[..., ::-1],  # RGB → BGR for OpenCV
+            [cv2.IMWRITE_PNG_COMPRESSION, 1]
+        )
 
     return canvas
        
@@ -245,7 +252,7 @@ def slice_max(w,sort_key): ###pipe this output directly into spotty. w is what s
     #     print("peak indice:",np.asarray(w[2])[peaks[0]])
     #     print("corresponding peaks in all_max:",np.asarray(all_max)[peaks[0]])
         if len(peak_hei) <= 1: ###ie. if there is only one peak 
-            spt_final += random.uniform(-1, -5)
+            spt_final += -5
             continue
         else:
             q = -1
@@ -259,7 +266,7 @@ def slice_max(w,sort_key): ###pipe this output directly into spotty. w is what s
                     spt += (each_peak-min(peak_range[peaks[0][q-1]:peaks[0][-1]]))*2
             spt_final += len(peaks[0])*spt/w[3]
     if spt_final <= 0:
-        spt_final = random.uniform(-1, -5)
+        spt_final = -5
     else:
         spt_final=math.log(spt_final)
     # Amplify distant peaks by non-linear weighting
@@ -272,7 +279,7 @@ def slice_max(w,sort_key): ###pipe this output directly into spotty. w is what s
         distribution = np.sum(distances) 
         distribution = math.log(distribution)
     else:
-        distribution = random.uniform(-1, -5)
+        distribution = -5
 
     return spt_final, distribution, cor_list
 
@@ -436,9 +443,14 @@ def process_single_image(fp, model, std_scaler, minmax_scaler, thr=-2.8,
                             debug=False, debug_save_plots=False, debug_contour_idx=None):
     try:
         start_time = time.time()
-        outdir = os.path.join(tempfile.gettempdir(), os.path.splitext(os.path.basename(fp))[0])
-        
-        os.makedirs(outdir, exist_ok=True)
+        BN_TEMP_ROOT = os.path.join(tempfile.gettempdir(), "BlueNuclei")
+        os.makedirs(BN_TEMP_ROOT, exist_ok=True)
+
+        base = os.path.splitext(os.path.basename(fp))[0]
+        run_id = f"{base}__{int(time.time())}"
+        outdir = os.path.join(BN_TEMP_ROOT, run_id)
+
+        os.makedirs(outdir, exist_ok=False)
         print("Saving debug plots to:", plotdir)
         print("Saving visual plots to:", outdir)
 
@@ -1016,17 +1028,27 @@ def process_single_image(fp, model, std_scaler, minmax_scaler, thr=-2.8,
             color_1 = (255, 255, 0)
             color_2 = (0, 255, 255)
             color_3 = (255, 0, 0)
-            conf_thresh = 0.3
+            best_threshold = thr
 
             # === Plot 1: neuron contours ===
+            n_neurons = len(enlarged_all_neu_con)
+            has_nucleus = np.zeros(n_neurons, dtype=bool)
+            has_nucleus[np.array(roi_to_neuron_idx, dtype=int)] = True
+
             gfp_rgb = np.zeros((*img4_GFP.shape, 3), dtype=np.uint8)
             gfp_rgb[..., 1] = autoscale_image(img4_GFP)
 
-            contours_1 = [np.array(c) for c in enlarged_all_neu_con]
+            white = (255, 255, 255)
 
+            contours_1 = [np.array(c) for c in enlarged_all_neu_con]
             label_positions_1 = [np.mean(c.reshape(-1, 2), axis=0) for c in contours_1]
-            text_labels_1 = ["neuron" for _ in contours_1]  # dummy text, ignored visually
-            text_colors_1 = [(255, 0, 0)] * len(contours_1)
+
+            text_labels_1 = [
+                "neuron" if has_nucleus[i] else "neuron with no nucleus"
+                for i in range(len(contours_1))
+            ]
+            text_colors_1 = [white] * len(contours_1)
+
 
             draw_contour(contours_1, gfp_rgb, True, [color_1] * len(contours_1),
                          text_labels=text_labels_1,
@@ -1055,14 +1077,17 @@ def process_single_image(fp, model, std_scaler, minmax_scaler, thr=-2.8,
                 scaled_vals = scaled[i]  # These are the exact values passed to the SVM
                 cls = "Live" if preds[i] == 1 else "Dead"
                 conf = confs[i]
-                col = color_2 if abs(conf) > conf_thresh else color_3
+                border_margin = 1.00
+                is_borderline = (abs(conf - best_threshold) < border_margin)
+                col = color_3 if is_borderline else color_2
+                dist_to_thr = conf - best_threshold
                 label = (f"#{i} (scaled value/raw value)\n"
                          f"Area*: {scaled_vals[3]:.3f} / {raw_vals['area']:.0f}\n"
                          f"Intensity*: {scaled_vals[2]:.3f} / {raw_vals['intensity']:.2f}\n"
                          f"Spottiness*: {scaled_vals[0]:.3f} / {raw_vals['spottiness']:.2f}\n"
                          f"Distribution*: {scaled_vals[1]:.3f} / {raw_vals['distribution']:.2f}\n"
                          f"Edge_gradient*: {scaled_vals[4]:.3f} / {raw_vals['edge_gradient']:.2f}\n"
-                         f"Class: {cls} ({conf:.2f})")
+                         f"Class: {cls} (conf={conf:.2f}, thr={best_threshold:.2f}, Δ={dist_to_thr:.2f})")
 
 
                 labels.append(label)
@@ -1079,21 +1104,31 @@ def process_single_image(fp, model, std_scaler, minmax_scaler, thr=-2.8,
 
            
         elapsed = time.time() - start_time
-        return {
-            'filename': os.path.basename(fp),
-            'live': int(count_live),
-            'dead': int(count_dead),
-            'total': int(count_live + count_dead),
-            'time_sec': round(elapsed, 2),
-            'status': '✅ Success',
-            'confidence': confs.tolist(),
-            'predictions': preds.tolist(),
-            'svm_input': scaled_df,
-            'svm_input_raw': df_final.assign(**{'class': ['live' if p == 1 else 'dead' for p in preds]}),
-            'plot_dir': os.path.basename(outdir),
-            'total_neurons': len(all_neu_con),
-
+        del img4_GFP, img4_DAPI, blurred, laplacian, binary
+        gc.collect()    
+        details = {
+          "confidence": confs.tolist(),
+          "predictions": preds.tolist(),
+          "svm_input": scaled_df.to_dict(orient="records"),
+          "svm_input_raw": df_final.assign(
+              **{"class": ["live" if p == 1 else "dead" for p in preds]}
+          ).to_dict(orient="records"),
         }
+
+        with open(os.path.join(outdir, "details.json"), "w", encoding="utf-8") as f:
+            json.dump(details, f)
+
+        return {
+          'filename': os.path.basename(fp),
+          'live': int(count_live),
+          'dead': int(count_dead),
+          'total': int(count_live + count_dead),
+          'time_sec': round(elapsed, 2),
+          'status': '✅ Success',
+          'plot_dir': os.path.basename(outdir),
+          'total_neurons': len(all_neu_con),
+        }
+
 
     except Exception as e:
         logging.error(f"Analysis failed for image: {fp}", exc_info=True)

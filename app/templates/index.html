@@ -355,18 +355,21 @@
 
 
 
-        function removeAllFiles() {
-            document.getElementById('fileList').innerHTML = '';
-            updateFileCount();
+        async function removeAllFiles() {
+          document.getElementById('fileList').innerHTML = '';
+          document.getElementById('imageInput').value = '';
+          analysisResults = [];
+          document.getElementById('saveButton').disabled = true;
+          updateFileCount();
+
+          // server-side cleanup
+          try {
+            await fetch('/clear_temp', { method: 'POST' });
+          } catch (e) {
+            // optional: console.log(e)
+          }
         }
 
-        function removeFile(fileName) {
-            const fileItem = document.getElementById(`item-${fileName}`);
-            if (fileItem) {
-                fileItem.remove();
-                updateFileCount();
-            }
-        }
 
 
         function handleFiles(input) {
@@ -382,7 +385,6 @@
                     <div class="file-info">
                         <strong>${file.name}</strong>
                         <span id="status-${file.name}" class="status-text">Selected</span>
-                        <button class='remove-btn' onclick="removeFile('${file.name}')">Remove</button>
                     </div>`;
                 fileList.appendChild(li);
             }
@@ -402,41 +404,52 @@
         }
 
         async function analyzeImages() {
-            const files = document.getElementById('imageInput').files;
-            if (files.length === 0) return alert('Please select at least one image.');
+          const files = Array.from(document.getElementById('imageInput').files);
+          if (files.length === 0) return alert('Please select at least one image.');
+
+          analysisResults = [];
+          document.getElementById('saveButton').disabled = true;
+
+          for (const file of files) {
+            const statusNode = document.getElementById(`status-${file.name}`);
+            if (statusNode) statusNode.textContent = 'Analyzing...';
 
             const formData = new FormData();
-            for (let file of files) {
-                formData.append('images', file);
-            }
+            formData.append('images', file); // send ONE image
 
-            for (let file of files) {
-                document.getElementById(`status-${file.name}`).textContent = `Analyzing...`;
-            }
+            try {
+              const response = await fetch('/analyze', { method: 'POST', body: formData });
+              const resultArr = await response.json();   // your server returns a list
+              const result = resultArr[0];
 
-            const response = await fetch('/analyze', {
-                method: 'POST',
-                body: formData
-            });
+              analysisResults.push(result);
 
-            const results = await response.json();
-            analysisResults = results;
-
-            results.forEach(result => {
-                const statusEl = document.getElementById(`status-${result.filename}`);
+              const statusEl = document.getElementById(`status-${file.name}`);
+              if (statusEl) {
                 if (result.status && result.status.startsWith('❌')) {
-                    statusEl.textContent = result.status;
+                  statusEl.textContent = result.status;
                 } else {
-                    statusEl.innerHTML = `${result.status}<span class='pipe'> | </span>Live: ${result.live}<span class='pipe'> | </span>Dead: ${result.dead}<span class='pipe'> | </span>Total: ${result.total}<span class='pipe'> | </span>Time: ${result.time_sec}s`;
-                }
-                if (result.plot_dir) {
+                  statusEl.innerHTML =
+                    `${result.status}<span class='pipe'> | </span>Live: ${result.live}` +
+                    `<span class='pipe'> | </span>Dead: ${result.dead}` +
+                    `<span class='pipe'> | </span>Total: ${result.total}` +
+                    `<span class='pipe'> | </span>Time: ${result.time_sec}s`;
+                  if (result.plot_dir) {
                     statusEl.innerHTML += `<span class='pipe'> | </span><a href="/visualize/${result.plot_dir}" target="_blank">Visualize</a>`;
+                  }
                 }
+              }
+            } catch (err) {
+              const statusEl = document.getElementById(`status-${file.name}`);
+              if (statusEl) statusEl.textContent = `❌ Request failed (timeout). Try fewer images.`;
+              console.error(err);
+              break;
+            }
+          }
 
-            });
-
-            document.getElementById('saveButton').disabled = false;
+          document.getElementById('saveButton').disabled = (analysisResults.length === 0);
         }
+
 
         function saveResults() {
             if (analysisResults.length === 0) return;

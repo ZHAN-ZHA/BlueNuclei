@@ -5,10 +5,58 @@ import joblib
 from werkzeug.utils import secure_filename
 from .BlueNuclei_utils import process_single_image
 from packaging.version import Version, InvalidVersion
+import shutil
+
+
+BN_TEMP_ROOT = os.path.join(tempfile.gettempdir(), "BlueNuclei")
+
+def clear_bluenuclei_temp(older_than_seconds: int | None = None) -> int:
+    """
+    Delete BlueNuclei temp folders.
+    If older_than_seconds is None: delete everything under BN_TEMP_ROOT.
+    Returns number of deleted subfolders.
+    """
+    if not os.path.isdir(BN_TEMP_ROOT):
+        return 0
+
+    now = time.time()
+    deleted = 0
+
+    for name in os.listdir(BN_TEMP_ROOT):
+        p = os.path.join(BN_TEMP_ROOT, name)
+        if not os.path.isdir(p):
+            continue
+
+        # If using age-based cleanup, skip recent folders
+        if older_than_seconds is not None:
+            try:
+                mtime = os.path.getmtime(p)
+            except OSError:
+                mtime = now
+            if (now - mtime) < older_than_seconds:
+                continue
+
+        try:
+            shutil.rmtree(p, ignore_errors=False)
+            deleted += 1
+        except Exception:
+            # Best effort: don't crash the app due to a locked file
+            pass
+
+    # Optional: remove root if empty
+    try:
+        if not os.listdir(BN_TEMP_ROOT):
+            os.rmdir(BN_TEMP_ROOT)
+    except Exception:
+        pass
+
+    return deleted
 
 def resource_path(relative_path: str) -> str:
-    base_path = getattr(sys, "_MEIPASS", os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    # DEV MODE: relative to this file (app/)
+    return os.path.join(os.path.dirname(__file__), relative_path)
 
 app = Flask(
     __name__,
@@ -20,6 +68,9 @@ app = Flask(
 std_scaler = joblib.load(resource_path("std_scaler.pkl"))
 minmax_scaler = joblib.load(resource_path("minmax_scaler.pkl"))
 model = joblib.load(resource_path("svm_model.pkl"))
+
+# Clean existing temp files (if any) from previous run
+clear_bluenuclei_temp() 
 
 # --- version reading + update checking (same as you wrote) ---
 _update_cache = {"t": 0.0, "msg": None}
@@ -126,7 +177,7 @@ def analyze():
 
 @app.route('/temp_plot/<img_id>/<plot_name>')
 def temp_plot(img_id, plot_name):
-    temp_path = os.path.join(tempfile.gettempdir(), img_id, plot_name)
+    temp_path = os.path.join(BN_TEMP_ROOT, img_id, plot_name)
     return send_file(temp_path, mimetype='image/png')
 
 @app.route('/visualize/<img_id>')
@@ -137,5 +188,18 @@ def visualize(img_id):
 def diagram():
     return render_template('BlueNuclei_diagram.html')
 
+@app.route('/details/<img_id>')
+def details(img_id):
+    p = os.path.join(BN_TEMP_ROOT, img_id, "details.json")
+    return send_file(p, mimetype="application/json")
 
+@app.post("/clear_temp")
+def clear_temp():
+    # If you want "Remove All" to wipe everything:
+    deleted = clear_bluenuclei_temp()
+
+    # Or safer:
+    # deleted = clear_bluenuclei_temp(older_than_seconds=60)  # delete folders older than 1 minute
+
+    return jsonify({"status": "ok", "deleted": deleted})
 
