@@ -64,6 +64,7 @@ app = Flask(
     static_folder=resource_path("static")
 )
 
+
 # load models
 std_scaler = joblib.load(resource_path("std_scaler.pkl"))
 minmax_scaler = joblib.load(resource_path("minmax_scaler.pkl"))
@@ -202,4 +203,13 @@ def clear_temp():
     # deleted = clear_bluenuclei_temp(older_than_seconds=60)  # delete folders older than 1 minute
 
     return jsonify({"status": "ok", "deleted": deleted})
+
+
+@app.get("/__shutdown")
+def __shutdown():
+    func = request.environ.get("werkzeug.server.shutdown")
+    if func is None:
+        return "Not running with the Werkzeug Server", 400
+    func()
+    return "Shutting down...", 200
 

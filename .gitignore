@@ -1,17 +1,27 @@
-# PyInstaller output
-build/
-dist/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
 
-# Virtual environments
-build_env/
-venv/
+# Logs / temp
+*.log
+*.tmp
 
-# Python cache
+# Python
 __pycache__/
 *.pyc
 
-# OS/editor junk
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
+# Virtual environments
+build_env_mac/
+build_env_win/
+build_venv_mac/
+build_venv_win/
+venv/
+.env/
+build_venv/
+build_env/
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
