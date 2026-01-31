@@ -2,7 +2,7 @@ import os, sys, time, traceback, threading, webbrowser, socket
 from urllib.request import Request, urlopen
 import tkinter as tk
 from PIL import Image, ImageTk
-
+import webview 
 
 # -------------------------
 # Logging (safe + robust)
@@ -146,19 +146,25 @@ def show_splash(png_name: str = "splash.png"):
 # Server helpers
 # -------------------------
 
-def wait_for_http(url: str, timeout_s: float = 180.0, interval_s: float = 0.2) -> bool:
+def wait_for_http(url: str, timeout_s: float = 180.0, interval_s: float = 0.2, pump=None) -> bool:
     deadline = time.time() + timeout_s
     while time.time() < deadline:
+        if pump:
+            try:
+                pump()
+            except Exception:
+                pass
+
         try:
             req = Request(url, headers={"User-Agent": "BlueNuclei-Launcher"})
             with urlopen(req, timeout=1.0) as resp:
                 code = resp.getcode()
-                # treat anything that responds as "up"
                 if 200 <= code < 500:
                     return True
         except Exception:
             time.sleep(interval_s)
     return False
+
 
 def find_free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -195,6 +201,36 @@ def try_shutdown_server(url_base: str, timeout_s: float = 2.0):
     except Exception:
         write_log("Shutdown request failed or not supported (ok).")
 
+def find_free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+def run_flask_server(port: int):
+    try:
+        write_log("Importing server...")
+        from app.server import app as flask_app
+        write_log(f"Starting Flask on 127.0.0.1:{port} ...")
+        flask_app.run(
+            host="127.0.0.1",
+            port=port,
+            debug=False,
+            use_reloader=False,
+            threaded=True,
+        )
+    except Exception:
+        write_log("=== Flask server failed to start ===")
+        write_log(traceback.format_exc())
+
+def try_shutdown_server(url_base: str, timeout_s: float = 2.0):
+    try:
+        shutdown_url = url_base.rstrip("/") + "/__shutdown"
+        req = Request(shutdown_url, headers={"User-Agent": "BlueNuclei-Launcher"})
+        with urlopen(req, timeout=timeout_s):
+            pass
+        write_log("Shutdown request sent.")
+    except Exception:
+        write_log("Shutdown request failed or not supported (ok).")
 
 # -------------------------
 # Main
@@ -202,62 +238,56 @@ def try_shutdown_server(url_base: str, timeout_s: float = 2.0):
 
 if __name__ == "__main__":
     install_exception_hooks_and_stdio()
-    write_log("\n=== BlueNuclei launcher start ===")
+    write_log("\n=== BlueNuclei launcher start (pywebview) ===")
 
+    # optional: splash while server starts
     root, close_splash = show_splash("splash.png")
+
+    def pump_tk():
+        # let Tk paint + respond
+        root.update_idletasks()
+        root.update()
+
 
     port = find_free_port()
     url = f"http://127.0.0.1:{port}/"
     write_log(f"Using port: {port}")
 
-    server_thread = threading.Thread(target=run_flask_server, args=(port,), daemon=False)
+    # start server
+    server_thread = threading.Thread(target=run_flask_server, args=(port,), daemon=True)
     server_thread.start()
 
-    # Make finish idempotent
-    _finished = {"done": False}
-    def finish():
-        if _finished["done"]:
-            return
-        _finished["done"] = True
+    # wait for server
+    ok = wait_for_http(url, timeout_s=180.0, interval_s=0.2, pump=pump_tk)
+    try:
+        close_splash()
+        root.quit()
+        root.destroy()
+    except Exception:
+        pass
 
-        # Change #4: best-effort clean shutdown; then don't hang forever.
-        # try_shutdown_server(url)
+    if not ok:
+        write_log("Timeout waiting for server.")
+        # show your tk error box if you want
+        sys.exit(1)
 
-        try:
-            close_splash()
-        except Exception:
-            pass
+    # Create a real app window (owned by your process)
+    window = webview.create_window(
+        "BlueNuclei",
+        url,
+        width=1200,
+        height=800,
+        resizable=True,
+    )
 
+    def on_closed():
+        write_log("Webview window closed -> shutting down server")
+        try_shutdown_server(url)
+        write_log("Exiting launcher process")
+        # daemon server thread will not block exit
 
+    window.events.closed += on_closed
 
-    def check_ready():
-        write_log(f"Waiting for server at {url} ...")
-        ok = wait_for_http(url, timeout_s=180.0, interval_s=0.2)
+    # Start the GUI loop (blocking)
+    webview.start()
 
-        if ok:
-            write_log("Server responded. Opening browser...")
-            try:
-                webbrowser.open(url)
-                write_log("webbrowser.open() called.")
-            except Exception:
-                write_log("webbrowser.open() failed:")
-                write_log(traceback.format_exc())
-            root.after(0, finish)
-        else:
-            write_log("Timeout waiting for server.")
-            try:
-                import tkinter.messagebox as mb
-                mb.showerror("BlueNuclei", f"Server did not start.\n\nLog:\n{log_path()}")
-            except Exception:
-                pass
-            root.after(0, finish)
-
-    root.after(50, lambda: threading.Thread(target=check_ready, daemon=True).start())
-
-    root.mainloop()
-
-    # Change #4: DO NOT join forever.
-    # Give server a brief moment to stop; then exit anyway.
-    write_log("Tk mainloop exited; waiting briefly for server thread.")
-    server_thread.join(timeout=30.0)
-    write_log("Launcher exit.")
