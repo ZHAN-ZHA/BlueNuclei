@@ -11,14 +11,20 @@ a = Analysis(
         ('app/minmax_scaler.pkl', '.'),
         ('app/svm_model.pkl', '.'),
         ('app/svm_threshold.pkl', '.'),
+        ('app/splash.png', '.'),
         ('version.txt', '.'),
-        ('app/splash.png', '.'),  
     ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        'tensorflow', 'keras',
+        'torch', 'torchvision', 'torchaudio',
+        'jax', 'jaxlib',
+        'notebook', 'jupyterlab', 'jupyter_server',
+        'panel', 'bokeh', 'distributed', 'dask',
+    ],
     noarchive=False,
     optimize=0,
 )
@@ -30,17 +36,20 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='BlueNuclei',
+    name='BlueNuclei',            # produces BlueNuclei.exe
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,
+    console=False,                # windowed (no console)
     disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
+
+    # Windows icon must be .ico
+    icon='app/icon.ico',
+
+    # Optional (leave these as default unless you need them)
+    uac_admin=False,
+    uac_uiaccess=False,
 )
 
 coll = COLLECT(
@@ -50,10 +59,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='BlueNuclei',
+    name='BlueNuclei',            # dist/BlueNuclei/BlueNuclei.exe + _internal
 )
-
-app = BUNDLE(coll,
-         name='BlueNuclei.app',
-         icon=None,
-         bundle_identifier=None)
