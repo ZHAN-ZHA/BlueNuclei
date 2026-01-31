@@ -12,16 +12,23 @@ __pycache__/
 *.pyc
 
 # Virtual environments
-build_env_mac/
-build_env_win/
-build_venv_mac/
-build_venv_win/
+build_env*
+build_env*/**
+build_venv*
+build_venv*/**
 venv/
 .env/
-build_venv/
-build_env/
+
+# Binaries / bundles
+*.exe
+*.app
+*.app/**
 
 # PyInstaller
 build/
+_internal/
+_Internal/
 dist/
+dist*
+dist*/**
 *.spec.bak
