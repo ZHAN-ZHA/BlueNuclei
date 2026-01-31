@@ -137,8 +137,7 @@ def show_splash(png_name: str = "splash.png"):
     def close():
         try: win.destroy()
         except Exception: pass
-        try: root.destroy()
-        except Exception: pass
+
 
     return root, close
 
@@ -222,16 +221,14 @@ if __name__ == "__main__":
         _finished["done"] = True
 
         # Change #4: best-effort clean shutdown; then don't hang forever.
-        try_shutdown_server(url)
+        # try_shutdown_server(url)
 
         try:
             close_splash()
         except Exception:
             pass
-        try:
-            root.quit()
-        except Exception:
-            pass
+
+
 
     def check_ready():
         write_log(f"Waiting for server at {url} ...")
@@ -262,5 +259,5 @@ if __name__ == "__main__":
     # Change #4: DO NOT join forever.
     # Give server a brief moment to stop; then exit anyway.
     write_log("Tk mainloop exited; waiting briefly for server thread.")
-    server_thread.join(timeout=3.0)
+    server_thread.join(timeout=30.0)
     write_log("Launcher exit.")
