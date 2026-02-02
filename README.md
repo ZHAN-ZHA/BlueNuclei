@@ -9,9 +9,9 @@
 BlueNuclei is a machine-learning–based software designed for neurobiologists without programming experience. It runs fully offline and is distributed as a stand-alone desktop application for Windows and macOS.
 
 A schematic overview of the algorithmic workflow is provided in [`BlueNuclei_workflow.svg`](BlueNuclei_workflow.svg). Full methodological details are described in the accompanying manuscript: 
-- Zhan Zha, Jing Jin, Russell L. Margolis, and Daniel Taliun
-[*BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features*](https://doi.org/10.64898/2026.01.29.702657)
-bioRxiv 2026.01.29.702657
+- Zhan Zha, Jing Jin, Russell L. Margolis, and Daniel Taliun.
+[*BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features*](https://doi.org/10.64898/2026.01.29.702657).
+bioRxiv, 2026.
 
 ## Supported input
 Under the current version (v1.0), only Zeiss .czi files are supported. The input file should be a dual-channel image with DAPI channel (nuclei) and GFP channel (cytoplasm).
@@ -107,9 +107,9 @@ Run the notebook [`extras/BlueNuclei_train_SVM.ipynb`](extras/BlueNuclei_train_S
 These files can be used to rebuild the BlueNuclei application with your custom SVM model.
 ## Citation
 If you use BlueNuclei in your research, please cite our accompanying manuscript:
-- Zhan Zha, Jing Jin, Russell L. Margolis, and Daniel Taliun
-[*BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features*](https://doi.org/10.64898/2026.01.29.702657)
-bioRxiv 2026.01.29.702657
+- Zhan Zha, Jing Jin, Russell L. Margolis, and Daniel Taliun.
+[*BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features*](https://doi.org/10.64898/2026.01.29.702657).
+bioRxiv, 2026.
 
 ## Contact
 For questions, data access, or collaboration:
