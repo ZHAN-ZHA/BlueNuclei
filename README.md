@@ -85,8 +85,9 @@ pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
 pip install pyinstaller waitress
 
-pyinstaller --noconfirm --clean BlueNuclei.spec
+pyinstaller --noconfirm --clean BlueNuclei_mac.spec
 ```
+If on Windows, change `BlueNuclei_mac.spec` to `BlueNuclei_win.spec`.
 ### Train a custom SVM model
 #### Step 1: Annotate nuclei in QuPath
 Use [QuPath](https://qupath.github.io/) (an open-source image annotation software) to label and annotate the nuclei in your images with the “wand” or “polygon” tool.
