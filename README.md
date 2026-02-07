@@ -8,7 +8,7 @@
 
 BlueNuclei is a machine-learning–based software designed for neurobiologists without programming experience. It runs fully offline and is distributed as a stand-alone desktop application for Windows and macOS.
 
-A schematic overview of the algorithmic workflow is provided in [`BlueNuclei_workflow.svg`](BlueNuclei_workflow.svg). Full methodological details are described in the accompanying manuscript: 
+A schematic overview of the algorithmic workflow is provided in [`assets/BlueNuclei_workflow.svg`](BlueNuclei_workflow.svg). Full methodological details are described in the accompanying manuscript: 
 - Zhan Zha, Jing Jin, Russell L. Margolis, and Daniel Taliun.
 [*BlueNuclei: automated identification and classification of live and dead transfected neurons using interpretable features*](https://doi.org/10.64898/2026.01.29.702657).
 bioRxiv, 2026.
